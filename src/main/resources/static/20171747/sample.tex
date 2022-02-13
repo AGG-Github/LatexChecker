@@ -1,0 +1,335 @@
+% !Mode:: "TeX:UTF-8"
+%# -*- coding:utf-8 -*-
+
+%% 南京大学学位论文的示例文档
+%% 作者：njuhan: https://github.com/njuHan
+%% 源模版repo: https://github.com/njuHan/njuthesis-nju-thesis-template
+
+\documentclass[winfonts,master,twoside]{njuthesis}
+%% 审阅模式很重要，命令是下方使用的/blind
+%% njuthesis 文档类的可选参数有：
+%%   winfonts, linuxfonts, macfonts, adobefonts winfonts 选项使得文档使用Windows 系统提供的字体；linuxfonts 选项使得文档使用Linux 系统提供的字体；macfonts 选项使得文档使用Mac 系统提供的字体；adobefonts 选项使得文档使用Adobe提供的OTF中文字体(需自行下载安转)
+%%   phd/master/bachelor 选择博士/硕士/学士论文
+%%   twoside 或 oneside 指定排版的文档为双面打印或单面打印格式（twoside会使得chapter 章节从奇数页开始，即纸张的正面开始，因此会出现一些空白的页面）
+%%   nobackinfo 取消封二页导师签名信息。注意，按照南大的规定，是需要签名页的。
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% set up labelformat and labelsep for subfigure 详见： http://www.latexstudio.net/archives/8652.html
+\captionsetup[subfigure]{labelformat=simple, labelsep=space}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 设置《国家图书馆封面》的内容，仅博士论文才需要填写
+
+% 设置论文按照《中国图书资料分类法》的分类编号
+%\classification{0175.2}
+% 设置论文按照《国际十进分类法UDC》的分类编号
+% 该编号可在下述网址查询：http://www.udcc.org/udcsummary/php/index.php?lang=chi
+%\udc{004.72}
+% 国家图书馆封面上的论文标题第一行，不可换行。此属性可选，默认值为通过\title设置的标题。
+%\nlctitlea{论文标题第一行}
+% 国家图书馆封面上的论文标题第二行，不可换行。此属性可选，默认值为空白。
+%\nlctitleb{论文标题第二行}
+% 国家图书馆封面上的论文标题第三行，不可换行。此属性可选，默认值为空白。
+%\nlctitlec{}
+% 导师的单位名称及地址
+%\supervisorinfo{南京大学计算机科学与技术系~~南京市汉口路22号~~210093}
+% 答辩委员会主席
+%\chairman{张三丰~~教授}
+% 第一位评阅人
+%\reviewera{阳顶天~~教授}
+% 第二位评阅人
+%\reviewerb{张无忌~~副教授}
+% 第三位评阅人
+%\reviewerc{黄裳~~教授}
+% 第四位评阅人
+%\reviewerd{郭靖~~研究员}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 设置论文的中文封面
+
+% 单行论文标题，不可换行
+\title{}
+\titlea{面向Hyperledger Fabric的}
+\titleb{智能合约开发插件的设计与实现}
+
+% 如果论文标题过长，可以分两行，第一行用\titlea{}定义，第二行用\titleb{}定义，
+% 使用以下3行：
+%\title{} %用于覆盖单行标题内容为空
+%\titlea{长标题第一行}  %第一行标题写这里
+%\titleb{长标题第二行用于长标题换行} %第二行标题写这里
+% 注意： \title 不能都注释，它用于控制标题选择双行还是单行。\title{}如果内容为空，则编译\titlea{},titleb{}双行标题，否则编译单行标题
+
+
+% 论文作者姓名
+\author{李天歌}
+% 论文作者联系电话
+\telphone{18851087701}
+% 论文作者电子邮件地址
+\email{13889384135@163.com}
+% 论文作者学生证号
+\studentnum{MF1932095}
+% 论文作者入学年份（年级）
+\grade{2019}
+% 论文作者毕业年份（届）, 出版授权书的学位年度
+\graduateyear{2021}
+% 导师姓名职称
+\supervisor{邵栋副教授，张贺教授}
+% 导师的联系电话
+\supervisortelphone{}
+% 论文作者的学科与专业方向
+\major{工程硕士（软件工程领域）}
+% 论文作者的研究方向
+\researchfield{软件工程}
+% 论文作者所在院系的中文名称
+\department{软件学院}
+% 论文作者所在学校或机构的名称。此属性可选，默认值为``南京大学''。
+\institute{南京大学}
+% 论文的提交日期，需设置年、月、日。
+\submitdate{2021年 3 月 13 日}
+% 论文的答辩日期，需设置年、月、日。
+\defenddate{2021年 4 月 30 日}
+% 论文的定稿日期，需设置年、月、日。
+% 此属性可选，若注释\date{}，则默认值为最后一次编译时的日期，精确到日。
+% \date{2019年5月20日}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 设置论文的英文封面
+
+% 论文的英文标题，不可换行
+\englishtitle{The Design and Implementation of Plugin for Developing Hyperledger Fabric Smart Contracts}
+% 论文作者姓名的拼音
+\englishauthor{Tiange Li}
+% 导师姓名职称的英文
+\englishsupervisor{ Associate Professor Dong Shao, Professor He Zhang}
+% 论文作者学科与专业的英文名
+\englishmajor{Software Engineering}
+% 论文作者所在院系的英文名称
+\englishdepartment{Software Institute}
+% 论文作者所在学校或机构的英文名称。此属性可选，默认值为``Nanjing University''。
+\englishinstitute{Nanjing University}
+% 论文完成日期的英文形式，它将出现在英文封面下方。需设置年、月、日。日期格式使用美国的日期
+% 格式，即``Month day, year''，其中``Month''为月份的英文名全称，首字母大写；``day''为
+% 该月中日期的阿拉伯数字表示；``year''为年份的四位阿拉伯数字表示。
+% 此属性可选，若注释掉\englishdate{}，则默认值为最后一次编译时的日期。
+% \englishdate{May 20, 2019}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 设置论文的中文摘要
+
+% 设置中文摘要页面的论文标题及副标题的第一行。
+% 此属性可选，其默认值为使用|\title|命令所设置的论文标题
+\abstracttitlea{面向Hyperledger Fabric的}
+% 设置中文摘要页面的论文标题及副标题的第二行。
+% 此属性可选，其默认值为空白
+\abstracttitleb{智能合约开发插件的设计与实现}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 设置论文的英文摘要
+
+% 设置英文摘要页面的论文标题及副标题的第一行。
+% 此属性可选，其默认值为使用|\englishtitle|命令所设置的论文标题
+\englishabstracttitlea{The Design and Implementation of Plugin}
+% 设置英文摘要页面的论文标题及副标题的第二行。
+% 此属性可选，其默认值为空白
+\englishabstracttitleb{for Developing Hyperledger Fabric Smart Contracts}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% 盲审命令，空白字段设置请看 .cls文件 \newcommand*{\blind}
+%% 此外，请按照盲审要求自行去掉个人简历、致谢等页面中的个人信息
+%%**********************！！！非常重要的盲审命令，送审前必选！！！****************
+\blind
+%%**********************！！！非常重要的盲审命令，送审前必选！！！****************
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% 制作国家图书馆封面（博士学位论文才需要）
+%\makenlctitle
+% 制作中文封面
+\maketitle
+% 制作英文封面
+\makeenglishtitle
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 开始前言部分
+\frontmatter
+
+\begin{abstract}
+	近年来随着数字化转型不断加速，各行业都开始重视数据存储的方式。
+	而区块链技术作为一种可溯源、不可篡改且去中心化的分布式数据存储架构，在全球掀起了热潮。
+	区块链如今发展到3.0阶段，以Hyperledger Fabric为代表的区块链架构已经不仅仅能够为金融领域服务，还为监管科技、支付、物流等多种行业提供了一种降低信任成本和交易成本的新途径。
+	与此同时，智能合约作为开发人员与区块链网络交互的唯一中介，其开发方式需要得到更多的关注。
+	然而，当前主流的集成开发环境（Integrated Development Environment，IDE）缺少对智能合约开发的支持，一方面导致其编写难以上手，影响开发效率和代码质量；
+	另一方面，智能合约在区块链网络中调试困难，每次修改都需要重新经历复杂的部署流程，而链下缺少智能合约调用和测试的工具。
+	
+	因此，本文针对Hyperledger Fabric Node.js智能合约设计了便于其编写、调试和测试的方案，并以IDE插件的形式实现了一种帮助开发人员在链下进行智能合约开发的工具。
+	插件基于IntelliJ平台和DevKit SDK开发;
+	采用FreeMarker模板技术实现初始智能合约的生成；
+	应用GPT-2自然语言处理模型针对Hyperledger Fabric智能合约提供代码智能提示；
+	基于Hyperledger Fabric的模拟桩、Mocha框架等实现智能合约模拟调用和测试；
+	结合IDE的调试模式，支持在智能合约调用异常时添加断点进行单步调试。
+	
+	本文描述了一个简单易用的智能合约开发插件的设计与实现。
+	该插件能够为智能合约开发者提供一个轻量级的链下开发工具，降低发布智能合约的时间损耗并且解决开发复杂度带来的挑战，提高开发和部署效率并且提升智能合约的代码质量，使得智能合约在部署到区块链网络上之前就能够保证编码和业务逻辑的正确性。
+	
+
+	% 同时应该注意到，空白页是故意留白，以便章节开头能够出现在偶数页。
+	% 中文关键词。关键词之间用中文全角分号隔开，末尾无标点符号。
+	\keywords{区块链；Hyperledger Fabric；智能合约；Node.js；IntelliJ插件}
+\end{abstract}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 论文的英文摘要
+\begin{englishabstract}
+	With the digital transformation continues to accelerate in recent years, all walks of life begin to pay attention to the way of data storage. 
+	As a distributed data storage architecture, which is traceable, immutable, and decentralized, blockchain technology has set off a global boom. 
+	Blockchain has entered a new stage of 3.0 nowadays. 
+	Blockchain architecture represented by Hyperledger Fabric can not only serve the financial field, but also provide a new method to reduce the cost of trust and transaction for various industries such as regulatory technology, payment, and logistics. 
+	At the same time, as the only intermediary between developers and blockchain networks, methods of developing smart contracts need more attention. 
+	However, mainstream Integrated Development Environment (IDE) lacks support for developing smart contracts currently. 
+	On the one hand, it is difficult to code smart contracts, which affects developing efficiency and code quality. 
+    On the other hand, it is difficult to debug smart contracts in blockchain networks, since modification requires complex deployment process every time and there is a lack of tools to run and test smart contracts off-chain.
+	
+	Therefore, this thesis designs a scheme for Node.js smart contracts in Hyperledger Fabric, which facilitates its coding, debugging, and test. 
+	It also implements a tool in the form of IDE plugin to help developers develop smart contracts off-chain. 
+	This thesis develops the plugin based on IntelliJ platform and DevKit SDK, 
+	which uses FreeMarker template technology to generate initial smart contracts and applies GPT-2 natural language processing model to provide code intelligent hints for Hyperledger Fabric smart contracts.
+	The plugin implements simulation invocation and test of smart contracts by Hyperledger Fabric mock stub, Mocha framework and other technologies.
+	It can be combined with IDE debugging mode and support breakpoints and single-step debugging if exception occurs during invocation of smart contracts.
+	
+	This thesis describes design and implementation of a plugin for smart contracts development, which is easy to use. 
+	The plugin provides developers with a lightweight off-chain development tool for smart contracts. 
+	It can not only reduce the cost of time when publishing smart contracts but also fix the challenge in the aspect of complexity of operation.
+	The plugin improves the efficiency of development and deployment and enhances code quality of smart contracts. 
+	It helps developers ensure correctness of code and business logic before publishing smart contracts in blockchain networks.
+	
+	% 英文关键词。关键词之间用英文半角逗号隔开，末尾无符号。
+	\englishkeywords{Blockchain, Hyperledger Fabric, Smart Contracts, Node.js, IntelliJ Plugin}
+\end{englishabstract}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 论文的前言，应放在目录之前，中英文摘要之后，一般不需要
+%
+%\begin{preface}
+%
+%在过去的40年中，手写中文文本领域识别（HCTR）取得了很大的进展[1,2]。
+%
+%\vspace{1cm}
+%\begin{flushright}
+%饶安逸\\
+%2018年5月15日于南大仙林
+%\end{flushright}
+%
+%\end{preface}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 生成论文目录
+\tableofcontents
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 生成插图清单。如无需插图清单则可注释掉下述语句。
+\listoffigures
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 生成附表清单。如无需附表清单则可注释掉下述语句。
+\listoftables
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 开始正文部分
+\mainmatter
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 学位论文的正文应以《绪论》作为第一章，本模板是按照自身功能模块组织的，并非论文中的章节安排
+
+\input{chapter/Intro.tex}
+
+\input{chapter/Technology.tex}
+
+%\input{chapter/Requirement.tex}
+
+\input{chapter/Design.tex}
+
+\input{chapter/Implementation.tex}
+
+\input{chapter/Test.tex}
+
+\input{chapter/Final.tex}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 致谢，应放在结论之后
+\begin{acknowledgement}
+	白驹过隙，两年的硕士生活即将画上句点，南京大学带给了我无限的激情与收获。
+	在这个过程中，我感受到了知识的充盈，也经历了生活的成长。
+	感谢我美好的母校，感谢在实验室里的点点滴滴。
+
+	在整个毕业设计和学业的完成过程中，离不开指导教师、学长学姐、同学和家人对我的帮助与支持。
+
+	感谢我的指导教师——邵栋老师和张贺老师。
+	从选题初期开始，就耐心地与我探讨，为毕业设计题目的确定带来启示。
+	在论文的撰写过程中，老师也会细心指导。
+	完成初稿后，老师建议我如何修改与完善。
+	老师的辛苦付出，使得整个毕业论文的撰写过程有条不紊，思路清晰。
+	依据老师给出的建议，再经过自己的思考并反复修改最终定稿。
+
+	感谢所有带给我知识和帮助的老师们。从对编程懵懵懂懂，成长为可以独立做出一些成果，是他们的悉心指导使我不断充实自己。
+
+	感谢实验室的小伙伴和我的朋友们。在我遇到问题和困难的时候，是他们与我一起探讨，帮助我一起解决，给我提供了很多自己的想法。因为有了他们，生活也变得多姿多彩。
+
+	还要感谢家人们给我的支持。倾听我分享学习、工作和生活上的事，理解我的想法与决定，信任并支持我的选择，带给我关心和爱，他们永远是我最坚强的后盾。
+
+	最后，感谢在百忙之中耐心评阅论文的各位老师！
+
+	在未来的学习与成长的道路上，我也会努力前行，坚持探索，增强实践能力，不负老师和亲人们的殷切期望。最后，祝愿母校人才济济，越来越好！
+\end{acknowledgement}
+
+
+
+
+% 参考文献。应放在\backmatter之前。
+% 推荐使用BibTeX，若不使用BibTeX时注释掉下面一句。
+%\nocite{*}
+\bibliography{sample}
+
+
+% 附录，必须放在参考文献后，backmatter前
+%\appendix
+%\chapter{附录代码}\label{app:1}
+%\section{main函数}
+%\begin{lstlisting}[language=C]
+%int main()
+%{
+%	return 0;
+%}
+%\end{lstlisting}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 书籍附件
+\backmatter
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 作者简历与科研成果页，应放在backmatter之后
+\begin{resume}
+% 论文作者身份简介，一句话即可。
+\begin{authorinfo}
+\noindent 李天歌，女，汉族，1997年7月出生，黑龙江省哈尔滨人。
+\end{authorinfo}
+% 论文作者教育经历列表，按日期从近到远排列，不包括将要申请的学位。
+\begin{education}
+\item[2019年9月 --- 2021年6月] 南京大学软件学院 \hfill 硕士
+\item[2015年9月 --- 2019年6月] 东北大学软件学院 \hfill 本科
+\end{education}
+% 论文作者在攻读学位期间所发表的文章的列表，按发表日期从近到远排列。
+% 论文作者在攻读学位期间参与的科研课题的列表，按照日期从近到远排列。
+\end{resume}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 生成《学位论文出版授权书》页面，应放在最后一页
+%\makelicense
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\end{document}

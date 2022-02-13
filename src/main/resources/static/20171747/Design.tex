@@ -1,0 +1,427 @@
+\chapter{插件的需求分析与设计}
+
+本章主要对面向Hyperledger Fabric的智能合约开发插件进行需求分析和设计。
+首先按模块进行功能性需求分析并介绍了插件的非功能性需求；
+接着概述了插件的整体架构以及模块划分设计；
+最后针对每个功能模块详细阐述设计思路。
+
+\section{功能性需求分析}
+
+\subsection{功能需求概述}
+
+插件的用例图如图~\ref{fig:3.1}所示。
+
+\begin{figure}[htb]
+  \centering
+  \includegraphics[width=0.9\linewidth]{figure/requirement/用例图.png}
+  \caption{用例图}\label{fig:3.1}
+\end{figure}
+
+面向Hyperledger Fabric的智能合约开发插件作为辅助区块链开发人员进行智能合约开发的工具，需要满足智能合约开发周期涉及的创建、编写、调用以及测试等功能性需求：
+
+\begin{itemize}
+  \item 初始代码生成，智能合约开发者需要根据Hyperledger Fabric的使用版本和应用场景选取合适的智能合约初始模板，代码生成模块将为开发者创建一份初始智能合约。
+  \item 代码智能提示，开发者在IDE中编写智能合约代码时，需要插件提供实时的代码智能提示，该功能需要补全当前键入的单词序列，并给出备选提示。
+  \item 模拟调用及测试，当开发者完成智能合约编写后，需要插件提供工具窗口，展示当前项目中的智能合约及其内部的接口信息，开发者可以通过该窗口完成智能合约的模拟调用并获取测试结果。
+\end{itemize}
+
+\subsection{Fabric智能合约初始模板生成模块}
+
+Hyperledger Fabric 1.0正式版本于2017年发布，在IBM、Google等企业的大力支持下，其2.0正式版本于2020年发布.
+升级后的Fabric主要增加了以下几点：
+
+\begin{itemize}
+  \item 智能合约去中心化管理。
+  \item 用于协作和共识的新链码模式。
+  \item 外部的链码启动程序。
+  \item 新的共识机制。
+  \item 新的智能合约开发包。
+\end{itemize}
+
+本论文经调研发现，虽然新版本的Hyperledger Fabric具有很多新优势，但是相比1.0版本其稳定性有所下降，而且由于目前新版本发布时间较短，其相关研究和应用程序较少，所以仍然有不少企业在使用1.0版本。
+
+Fabric 1.0版本对智能合约的开发提供了fabric-shim包，fabric-shim是较为底层的智能合约开发包，它封装了Hyperledger Fabric的网络通信协议gRPC，使得开发者可以直接调用链码接口。基于fabric-shim开发的智能合约需要定义一个类，在这个类中需要实现两个预定义的方法，分别是~\texttt{Init()}方法和~\texttt{Invoke()}方法，这两个方法都会接收节点传入的stub作为参数，通过stub可以进行账本的查询、更新等操作。在部署完毕的区块链网络中进行链码初始化时，客户端应用程序会调用~\texttt{Init()}方法，而客户端应用程序对智能合约接口的调用将会转化为对~\texttt{Invoke()}方法的调用。
+基于fabric-shim包进行智能合约编写较为简洁易用，适合业务逻辑简单的应用场景，但实现业务逻辑较为复杂应用场景则需要开发者在~\texttt{Invoke()}方法的实现中进行方法路由。
+
+Fabric 2.0版本增加了一种新的链码开发包fabric-contract-api，该开发包提供了对智能合约更高层级的封装，使得开发者可以直接继承Contract类进行智能合约开发，减少了方法路由所产生的繁杂冗余代码。
+
+由于Hyperledger Fabric两个版本各有优势劣势，其提供的智能合约开发包的适用场景也不尽相同，因此插件针对两种智能合约开发方式实现了初始模板生成的功能。插件需要IDE能够弹出提示窗口帮助用户创建初始智能合约，并在用户未创建项目环境等异常情况下给出错误警告和提示信息。
+
+\subsection{Fabric智能合约代码智能提示模块}
+
+随着区块链进入3.0可编程社会阶段，金融、物联网、供应链、医疗等多种领域都开始引入Hyperledger Fabric作为企业联盟链的区块链平台，为其提供数据存储和交易等方面的安全保障。智能合约所承载的业务逻辑逐渐复杂起来，代码体量将愈发庞大。因此，智能合约的编写工作不再适合使用简单的文本编辑器，否则对于区块链开发者而言会增大难度，也会浪费时间精力。
+
+IntelliJ IDE作为当前主流的程序集成开发环境，对项目构建、代码编写、程序编译、运行、调试等需求提供了强大的支持，极大地提高了程序的开发效率。代码编辑器是IntelliJ IDE的重要组件之一，从代码编写角度实现了全面的功能，包括代码自动补全、语法高亮、错误提示等。
+
+因为Hyperledger Fabric智能合约可以使用Java、Go等高级程序语言进行开发，所以开发者适合选择IntelliJ IDEA、GoLand等IDE代替普通的文本编辑器进行代码开发。
+
+运行在Peer节点上的智能合约是客户端应用程序与区块链网络中的账本进行交互的唯一途径。与普通的应用程序相比，智能合约开发者在编码过程中不仅需要学习编程语言的特性和语法规则，还需要考虑智能合约代码的特殊设计以及规范性方面的要求，而这需要开发者熟悉Hyperledger Fabric平台对于智能合约所提供的对外接口。因此，插件需要在IntelliJ IDE代码补全功能的基础之上做进一步的增强效果，针对Hyperledger Fabric两个版本的智能合约编写提供代码智能提示功能。
+
+IntelliJ IDE本身提供的代码补全效果是以键入字符序列时自动弹出的下拉列表的形式展现的。插件需要在开发者键入字符序列的同时，实时地展示代码智能提示，将GPT-2模型预测的Top-k选项加入下拉清单中作为备选提示，开发者可以根据编码目的选择最合适的选项。
+
+插件需要基于IntelliJ平台提供的DevKit SDK开发包进行开发，在不影响IDE性能的前提下，将代码智能提示功能与IDE原有的代码补全效果相融合。
+
+插件针对Hyperledger Fabric智能合约提供的代码智能提示功能可以降低智能合约的开发门槛，提升智能合约的开发效率，与此同时，让开发者将注意力集中在业务逻辑的实现上。
+
+\subsection{Fabric智能合约模拟调用模块}
+
+Hyperledger Fabric在网络搭建层面既支持单机上的单个或多个节点，也支持多机多节点部署。客户端应用程序在调用智能合约接口以对区块链账本进行增删改查等逻辑行为之前，至少需要在本地成功搭建一个单节点的Fabric网络。
+然而，Hyperledger Fabric的搭建过程较为复杂，而且在Fabric升级到2.0版本后，其平台搭建过程与1.0版本相比产生了较大的区别，智能合约的生命周期也发生了改动。
+Hyperledger Fabric智能合约部署流程如图~\ref{fig:3.2}所示。
+
+\begin{figure}[htb]
+  \centering
+  \includegraphics[width=0.9\linewidth]{figure/requirement/智能合约部署流程.png}
+  \caption{智能合约部署流程}\label{fig:3.2}
+\end{figure}
+
+由于区块链网络的搭建繁杂耗时，且仅针对智能合约的开发而言不是必要条件，因此插件需要提供一个在无需搭建区块链网络的前提下就能对智能合约进行接口模拟调用的入口。
+
+在实际开发环境中，由于开发者缺少一个针对Hyperledger Fabric智能合约的开发工具，因此在网络中部署的智能合约漏洞频发，导致其无法在Peer节点被执行。当智能合约执行报错时，开发者需要搭建并配置Dev模式进行智能合约调试，每一次修改智能合约后，仍然需要重新启动整个Fabric网络，创建通道，将参与交易的Peer节点加入通道，编译、打包、安装并实例化智能合约，开发者需要经历一系列复杂且冗余的操作后，才能重新尝试执行智能合约。
+
+安全性是区块链技术最关注的因素之一，而网络整体的安全程度很大程度上取决于网络内的节点数量，在多节点的网络内进行智能合约的反复调试和反复部署更加费时费力。
+
+基于IntelliJ平台开发的IDE没有针对Hyperledger Fabric智能合约调试或者测试提供相关的功能，因此，本插件作为一个Hyperledger Fabric智能合约的链下开发工具，需要为开发者提供可以进行智能合约模拟调用的工具窗口，并对测试结果进行展示。
+
+智能合约开发者可以利用本插件的模拟调用及测试功能，在将智能合约发布到区块链网络节点之前就确保其实现和业务逻辑的正确性，既提升了代码质量，又能帮助开发人员节省大量时间，提升开发效率。
+
+\section{非功能性需求分析}
+
+本论文设计并实现的插件需要嵌入到IntelliJ平台的IDE中，所以对其非功能性需求较高。
+插件性能需要满足一定标准，在不影响IDE其他功能正常使用的同时，改善开发者使用插件的体验感。
+插件的性能、稳定性等重要的非功能性衡量指标如表~\ref{table:requirement}所示：
+
+\begin{table}[htb]\scriptsize
+\centering
+\caption{非功能性需求列表}
+\vspace{2mm}
+% l - left, r - right, c - center. | means one vertical line
+\begin{tabular}{ccc}
+\toprule
+\textbf{非功能性需求}&\textbf{目标}&\textbf{优先级}\\
+\midrule
+\textbf{可扩展性}&支持IntelliJ平台扩展点&高\\ \hline
+\textbf{可用性}&良好的界面交互设计&高\\ \hline
+\textbf{稳定性}&99.99\%的场景稳定运作&高\\ \hline
+\multirow{2}*{\textbf{性能}}&对接口的调用的平均响应时间小于50ms；&\multirow{2}*{高}\\
+~&智能合约的代码实时提示展示平均在30ms以内&~\\ \hline
+\textbf{可适配性}&支持嵌入多种基于IntelliJ平台开发的IDE&中\\ \hline
+\textbf{可部署性}&支持本地构建启动和仓库发布&中\\ \hline
+\textbf{可重用性}&具有重用插件扩展点和业务逻辑的能力&中\\ \hline
+\textbf{耦合性}&插件与自然语言处理服务解耦&中\\
+\bottomrule
+\end{tabular}
+\label{table:requirement}
+\end{table}
+
+
+插件作为IntelliJ IDE的可插拔式开发辅助工具，需要具备较好的可扩展性。插件的项目结构清晰，且基于IntelliJ平台的DevKit进行开发，可以通过类的继承、配置文件等方式进行功能点或业务逻辑的扩充。
+
+插件需要通过对话框、工具窗口等形式达到良好的可用性，便于开发者的理解和操作，易于上手。
+
+插件需要设计良好的异常处理机制，且稳定地提供NLP服务以维护智能合约代码智能补全的实时效果，具有较高的可靠性。
+
+插件需要进行良好的本地构建和仓库发布，以确保与IntelliJ平台的多种集成开发环境能够兼容适配，便于部署。
+
+IntelliJ平台的插件开发除了可以基于DevKit SDK，还可以基于GitHub Template、Gradle或Maven等构建工具，本插件的功能模块可以快速便捷地迁移到其他方式开发的插件中。
+
+\section{插件的概要设计}
+
+\subsection{插件的总体架构设计}
+
+插件基于IntelliJ平台进行开发，其总体架构设计如图~\ref{fig:3.3}所示：
+
+\begin{figure}[htb]
+  \centering
+  \includegraphics[width=0.95\linewidth]{figure/design/插件的总体架构设计.png}
+  \caption{插件的总体架构设计}\label{fig:3.3}
+\end{figure}
+
+面向Hyperledger Fabric智能合约的开发插件主要提供智能合约初始模板生成、代码智能提示、模拟调用及测试等功能。
+
+如上图所示，开发者可以在无需搭建Fabric网络的前提下，利用插件完成智能合约链下开发的整个过程。
+
+IntelliJ平台提供了多种插件搭建方式，本插件的业务功能模块基于DevKit插件进行设计与实现，图中虚线框表示经过实际验证可利用的其他搭建方式，可以将业务功能进行快速迁移。
+
+插件对智能合约开发者的需求的处理流程如下：
+
+\begin{itemize}
+  \item 首先，使用插件的智能合约开发者根据业务需求选择合适的智能合约模板，按照FTL语法规则预先定义好的模板文件采用了不同的智能合约开发报，插件将利用FreeMarker模板引擎加载指定文件，并按照模板为用户创建一份初始的智能合约。
+  \item 智能合约开发者在初始智能合约的基础上进行业务逻辑填充，在编写代码的同时，插件将提供实时的代码补全提示。系统通过搭建Flask Web服务器以实现对GPT-2模型加载、模型预测的支持，插件将与NLP深度学习的依赖关系进行解耦，通过HTTP请求的方式将单词序列转发给NLP服务并获取模型输出结果。插件在IntelliJ IDE原有的代码补全列表中添加了GPT-2模型预测的代码补全项。
+  \item 最后，开发者完成代码编写后，可以打开插件提供的智能合约工具窗口。该窗口基于IntelliJ平台提供的用户接口组件Tool Windows 实现，是开发者进行智能合约模拟调用和测试的入口。开发者可以使用工具窗口获取智能合约及其接口列表，根据业务需求填写接口参数。对于Node.js智能合约进行模拟调用和测试的底层实现使用Hyperledger Fabric提供的MockStub类，同时选择了对JavaScript代码测试提供良好支持的Mocha框架作为辅助。智能合约接口的模拟调用结果反馈在插件自定义的控制台中。
+\end{itemize}
+
+\subsection{插件的模块划分设计}
+
+本章从面向Hyperledger Fabric的智能合约开发插件的需求分析中提取了Fabric智能合约初始模板生成、代码智能提示、模拟调用及测试三个关键功能模块：
+
+\begin{itemize}
+  \item Fabric智能合约初始模板生成模块，主要负责加载不同FreeMarker模板，创建初始智能合约。
+  \item Fabric智能合约代码智能提示模块，主要负责扩展IntelliJ IDE的代码补全功能，增加对Fabric智能合约代码补全的效果。
+  \item Fabric智能合约模拟调用及测试模块，主要负责提供工具窗口，查询智能合约及其接口，模拟调用智能合约，在自定义控制台展示测试结果，测试报告的格式通过Mocha设置。
+\end{itemize}
+
+每个功能模块中分别包含若干系统模块，系统模块是插件内部开发的关键模块，对用户不可见。
+功能模块由实线方框表示，系统模块由虚线方框表示，如图~\ref{fig:3.4}所示：
+
+\begin{figure}[htb]
+  \centering
+  \includegraphics[width=\linewidth]{figure/design/功能模块图.png}
+  \caption{插件的功能及系统模块图}\label{fig:3.4}
+\end{figure}
+
+下面将结合UML建模方法对以上三大功能模块的详细设计进行阐述。
+
+\section{插件的详细设计}
+
+\subsection{Fabric智能合约初始模板生成模块设计}
+
+Fabric智能合约初始模板生成模块用于支持初始智能合约的创建，帮助开发者降低智能合约的编写门槛。该模块依赖FreeMarker模板技术定义FTL模板并利用模板引擎进行模板加载；依赖Java IO操作文件读写；依赖IntelliJ平台的Action系统提供用户交互接口。
+
+生成Fabric智能合约初始模板的流程图如图~\ref{fig:3.5}所示。
+
+\begin{figure}[htb]
+  \centering
+  \includegraphics[width=0.95\linewidth]{figure/design/创建流程.png}
+  \caption{生成Fabric智能合约初始模板流程图}\label{fig:3.5}
+\end{figure}
+
+IntelliJ平台的用户接口组件Messages支持插件在IDE中弹出各种对话窗口，包括信息提示、警告提示、错误提示等。
+插件可以在用户操作出现异常的情况下，给出对用户友好的错误提示信息。
+如果用户在当前工作空间未创建任何项目的情况下尝试生成智能合约，插件则会弹出错误提示对话框，提醒用户需要先创建一个项目。
+同时，插件通过Messages对话框的形式支持智能合约开发者设置智能合约名称并选择开发方式。
+
+插件基于FreeMarker模板技术生成智能合约文件，FreeMarker模板技术的工作原理示意图如图~\ref{fig:3.6}所示，其引擎执行流程如图~\ref{fig:3.7}所示。
+
+\begin{figure}[htb]
+  \centering
+  \includegraphics[width=5in]{figure/design/FreeMarker原理.png}
+  \caption{FreeMarker工作原理}\label{fig:3.6}
+\end{figure}
+
+\begin{figure}[htb]
+  \centering
+  \includegraphics[width=\linewidth]{figure/design/引擎执行流程.png}
+  \caption{FreeMarker引擎执行流程}\label{fig:3.7}
+\end{figure}
+
+FreeMarker模板引擎会根据开发者的选择加载指定路径下的FTL模板，并使用Java IO处理文件的创建、读写等操作，最终在符合Hyperledger Fabric开发规范的路径下创建一份初始的智能合约，将FreeMarker预先定义好的模板内容写入智能合约文件。
+
+插件从用户操作体验的角度考虑，为智能合约开发者提供了多种创建智能合约的入口，如表~\ref{table:generate}所示：
+
+\begin{table}[htb]\scriptsize
+\centering
+\caption{创建智能合约的入口}
+\vspace{2mm}
+% l - left, r - right, c - center. | means one vertical line
+\begin{tabular}{ccc}
+\toprule
+\textbf{入口}&\textbf{具体操作}&\textbf{快捷键}\\
+\midrule
+\textbf{IntelliJ IDE编辑器窗口}&右键并在下拉列表中选中Generate&Alt+Insert\\ \hline
+\textbf{IntelliJ IDE Tools菜单栏}&展开列表并选中Generate Initial Chaincode&无\\ \hline
+\multirow{2}*{\textbf{IntelliJ IDE Help菜单栏}}&展开列表并选中Find Action，&\multirow{2}*{Ctrl+Shift+A}\\
+~&在弹出的搜索窗口中输入关键字查找&~\\ \hline
+\textbf{自定义快捷键}&同时按下键盘上的Ctrl、Shift、G&Ctrl+Shift+G\\
+\bottomrule
+\end{tabular}
+\label{table:generate}
+\end{table}
+
+Fabric智能合约初始模板生成模块类图如图~\ref{fig:3.8}所示。
+创建智能合约的入口底层依赖IntelliJ平台的Action系统，需要继承AnAction作为父类，调用父类的构造函数定义入口按钮的名称，重写父类方法~\texttt{actionPerformed()}实现插件业务逻辑，其中AnActionEvent作为接口入参是IntelliJ项目元素的提供者。生成器类Generator是该模块的核心类，负责将数据模型融入FTL模板中。
+插件使用TemplateUtil工具类进行FreeMarker模板的配置、加载以及输出。
+
+\begin{figure}[htb]
+  \centering
+  \includegraphics[width=\linewidth]{figure/design/生成器类图.png}
+  \caption{Fabric智能合约初始模板生成模块类图}\label{fig:3.8}
+\end{figure}
+
+下文以时序图的形式展示了Fabric智能合约初始模板生成模块的动态模型设计，由此确定了对象之间的事件发生顺序，时序图如图~\ref{fig:3.9}所示。
+
+\begin{figure}[htb]
+  \centering
+  \includegraphics[width=\linewidth]{figure/design/生成器时序图.png}
+  \caption{Fabric智能合约初始模板生成模块时序图}\label{fig:3.9}
+\end{figure}
+
+\subsection{Fabric智能合约代码智能提示模块设计}
+
+Fabric智能合约代码智能提示模块用于支持智能合约的实时代码自动补全功能，增强IntelliJ IDE对于编写Fabric智能合约的代码提示效果。
+
+IntelliJ平台提供了多种方式支持插件实现自定义的代码自动补全功能，包括Completion Contributor、Reference-Based Completion以及Live Templates等。
+以上方式的区别如表~\ref{table:completionWay}所示。
+
+\begin{table}[htb]\scriptsize
+\centering
+\caption{代码补全方式列表}
+\vspace{2mm}
+% l - left, r - right, c - center. | means one vertical line
+\begin{tabular}{ccc}
+\toprule
+\textbf{方式}&\textbf{实现方式概述}&\textbf{适用场景}\\
+\midrule
+\multirow{2}*{\textbf{Completion Contributor}}&扩展IntelliJ平台提供的CompletionContributor，&\multirow{2}*{针对语言特性}\\
+~&填充结果集，注册扩展点&~\\ \hline
+\multirow{2}*{\textbf{Reference-Based Completion}}&扩展IntelliJ平台提供的PsiReferenceContributor，&\multirow{2}*{针对自定义语言的属性}\\
+~&为自定义语言提供其他语言元素的提示&~\\ \hline
+\multirow{2}*{\textbf{Live Templates}}&实现TemplateContextType，&\multirow{2}*{针对简单且固定的需求}\\
+~&创建并导出模板，注册扩展点&~\\ 
+\bottomrule
+\end{tabular}
+\label{table:completionWay}
+\end{table}
+
+Live Templates可以支持开发者根据编码习惯自定义一些代码片段，减少编写代码的重复性工作。
+Live Templates模板创建示例如图~\ref{fig:3.10}所示。
+
+\begin{figure}[htb]
+  \centering
+  \includegraphics[width=\linewidth]{figure/design/LiveTemplates.png}
+  \caption{Live Templates示例}\label{fig:3.10}
+\end{figure}
+
+其中Abbreviation设置的文本将作为选项添加到补全列表结果集中，模板内容中\$NAME\$表示输出结果的文本会变红，提示开发者修改代码内容；\$END\$表示创建模板后光标停留的位置。
+
+Hyperledger Fabric官方提供了Node.js智能合约实例，通过观察和研究发现，智能合约具有一些语法特性、编写规律和规范。
+虽然模块可以基于Live Templates或Referenced-Based Completion简单地实现Fabric智能合约的自动补全，但是这两种方式只能提供固定模式的代码补全效果，并且依赖人工对智能合约特性的观察与总结，灵活性较差。
+
+因此，插件从需求、灵活度、准确度、性能等方面进行深度考量，确定了此模块的最终设计思路。
+以IntelliJ IDE原有的代码补全作为扩展点，选择基于Completion Contributor和自然语言处理模型实现对Fabric智能合约代码提示的功能。
+
+此功能模块底层采用自然语言处理技术针对Fabric智能合约进行深度学习，为智能合约开发者提供高性能、高准确度的编码提示，帮助智能合约开发者降低编码难度，提升开发效率，与此同时，提高智能合约代码质量。
+
+代码智能补全从自然语言处理的角度考虑属于文本生成类型的研究问题。近年来，在文本生成领域涌现了多种预测模型，从2017年Google提出的Transformer模型，到2018年Google和OpenAI分别推出的BERT和GPT模型，以及2019年OpenAI升级后的GPT-2模型，这些生成效果较好的模型都借鉴了自注意力机制。
+
+通过研究和对比，插件采用了GPT-2模型作为Fabric智能合约代码智能提示模块的预测模型，主要有以下几点设计理由：
+
+\begin{itemize}
+  \item 参数规模庞大。OpenAI提供了四种参数规模不同的GPT-2，其中最大的Extra Large版本参数规模扩大到15亿，以此得到了更大的模型容量，可以处理更多的训练数据。
+  \item 预训练数据体量庞大。GPT-2 的数据集WebText容纳了800万网页，文本集合接近40GB~\cite{DBLP:conf/inlg/KoL20}，覆盖各种主题，通用性极强。不仅如此，OpenAI还对这些网页进行了高质量的过滤操作。
+  \item 模型结构改进。GPT-2底层基于Transformer模型的解码器，在沿用了Transformer自注意力机制的基础之上，设计了新的Masked Self-Attention机制，解码器模块的堆叠数量翻倍，扩大了字典，增加了输入序列长度。相比传统的基于CNN、RNN的语言模型，GPT-2在特征提取、计算资源利用率、预测性能上都有较大的改进。
+\end{itemize}
+
+综上，采用GPT-2模型生成的文本具有较好的连贯性，预测的准确率较高，适合应用于代码自动补全领域。
+
+插件需要实现对于IntelliJ平台的扩展点，即自定义的Completion Contributor，在该扩展点中获取当前编辑器中正在键入的文本序列，将其通过HTTP请求的方式发送给Flask框架。
+Flask将把接收到的请求路由到对应的接口，模型将服务器接收到的请求数据作为输入进行模型预测，将预测的结果列表作为输出返回给插件。
+最后，插件将预测选项添加到原有的代码补全列表中。
+Fabric智能合约代码智能提示模块的流程图如图~\ref{fig:3.11}所示。
+
+\begin{figure}[htb]
+  \centering
+  \includegraphics[width=5in]{figure/design/代码智能提示流程图.png}
+  \caption{Fabric智能合约代码智能提示模块流程图}\label{fig:3.11}
+\end{figure}
+
+由需求分析可知，此模块需要针对Fabric智能合约给出代码智能提示。因此，模块的数据集应该选取Fabric Node.js智能合约，由于智能合约是一段代码程序，其中可能包含大量注释，而这些注释内容并不是代码补全的目标，如果保留还会影响模型学习的上下文，所以需要对采集的数据进行预处理，删除Node.js智能合约中各种形式的注释。
+
+清洗之后的数据集还需要经历分词编码才能放入GPT-2模型中进行无监督学习。由于自然语言处理的训练过程对硬件要求较高，因此本论文采用GPU进行辅助，模型训练过程中需要不断调整参数，也可以通过可视化历史数据的方式对比观察，提升模型效果。
+
+插件将应用训练好的GPT-2模型支持代码自动补全功能，该功能需要提供实时效果且不能影响IntelliJ IDE的正常运行，因此对自然语言处理技术所提供的服务速度要求较高。
+
+由于分词器和GPT-2模型每次加载都会耗费较长时间，而实际预测速度较快，因此插件采用Flask Web服务器提供自然语言处理的服务.
+这种方式可以将模型进行预加载从而节省大量时间，同时也将IntelliJ插件与GTP-2模型做了良好的解耦，解耦示意图如图~\ref{fig:3.12}所示。
+
+\begin{figure}[htb]
+  \centering
+  \includegraphics[width=0.95\linewidth]{figure/design/解耦示意图.png}
+  \caption{插件与模型解耦示意图}\label{fig:3.12}
+\end{figure}
+
+如上图所示，Flask服务器提供对外暴露的接口，接口描述如表~\ref{table:apiDesc}所示。
+
+\begin{table}[htb]\scriptsize
+\centering
+\caption{接口描述}
+\vspace{2mm}
+% l - left, r - right, c - center. | means one vertical line
+\begin{tabular}{ccccc}
+\toprule
+\textbf{调用者}&\textbf{请求方式}&\textbf{接口调用地址}&\textbf{入参字段类型}&\textbf{入参字段名}\\
+\midrule
+Completion Contributor&POST&http://{ip:port}/plugin/completor&String&dataSequence\\
+\bottomrule
+\end{tabular}
+\label{table:apiDesc}
+\end{table}
+
+下文以时序图的形式展示了Fabric智能合约代码智能提示模块的动态模型设计，以此明确该模块中的对象关系和模块处理整个事件的先后顺序，时序图如图~\ref{fig:3.13}所示。
+
+\begin{figure}[htb]
+  \centering
+  \includegraphics[width=\linewidth]{figure/design/代码提示时序图.png}
+  \caption{Fabric智能合约代码智能提示模块时序图}\label{fig:3.13}
+\end{figure}
+
+\subsection{Fabric智能合约模拟调用模块设计}
+
+Fabric智能合约模拟调用模块用于支持智能合约开发者进行接口模拟调用、调试及测试，便于开发者在将智能合约发布到区块链网络节点之前，确保其代码编写的正确性。
+
+该模块在用户接口层面的实现依赖IntelliJ平台提供的用户接口组件Tool Windows，插件的图形用户界面布局的实现依赖Java提供的GUI开发工具包Swing。
+
+IntelliJ IDE的整个窗口界面包含了多个工具窗口，分别在IDE界面的左侧、底部和右侧。
+这些工具窗口相当于IDE的子窗口，可以独立地支持不同的功能需求，例如展示项目结构、集成其他工具、运行并调试应用程序等，工具窗口示意图如图~\ref{fig:3.14}所示。
+
+\begin{figure}[htb]
+  \centering
+  \includegraphics[width=\linewidth]{figure/design/工具窗口示意图.png}
+  \caption{IntelliJ IDE工具窗口示意图}\label{fig:3.14}
+\end{figure}
+
+模块自定义的工具窗口为智能合约开发者提供了与插件功能交互的入口，其内部共分为三个区域，分别是工具栏Tool Bar、智能合约接口面板以及模拟调用控制台。该工具窗口支持智能合约开发者在编辑窗口完成智能合约的编码工作后，进行接口的模拟调用及测试。
+
+Tool Bar需要向用户提供若干按钮，以支持查询智能合约及其接口信息，调用智能合约接口，重置智能合约接口面板等操作。
+
+智能合约接口面板以表格的形式展示了当前工作空间中的智能合约及其接口列表，并在表格中设置了文本框区域，支持智能合约开发者根据业务需求填写接口参数。
+
+模拟调用控制台是模块工具窗口中的一个自定义控制台，作为反馈智能合约正确性的区域，展示了接口测试的日志及结果。
+
+在Hyperledger Fabric网络中，SDK、CLI等客户端应用程序会调用运行在Peer节点的智能合约，而智能合约的业务逻辑代码可以利用ChaincodeStub类提供的接口，从而实现对于存储在区块中账本数据的操作，数据更新流程如图~\ref{fig:3.15}所示。
+
+账本中的每一条数据是以世界状态键值对的形式存储的，目前Hyperledger Fabric提供了两种状态数据库，分别是CouchDB和LevelDB~\cite{DBLP:conf/hpcc/Dyreson16}，两者都支持键值状态存储。
+
+\begin{figure}[htb]
+  \centering
+  \includegraphics[width=\linewidth]{figure/design/账本数据更新流程.png}
+  \caption{账本数据更新流程图}\label{fig:3.15}
+\end{figure}
+
+由需求分析可知，插件需要在无需搭建Hyperledger Fabric网络环境的前提下，实现链下的Node.js智能合约接口调用。因此，本模块底层基于Hyperledger Fabric提供的一种模拟桩ChaincodeMockStub实现。之所以能够利用ChaincodeMockStub类模拟智能合约接口的调用，是因为该类的内部维护了一个类似key-value状态数据库的Map<String,[]byte>，对该类接口的调用会作用于内存中的Map。
+
+同时，该模块的实现需要搭建Node.js环境提供支持，依赖FreeMarker模板技术结合当前主流且简单灵活的JavaScript测试框架Mocha共同完成。模块需要查找并提取智能合约的接口和参数，将提取内容作为FreeMarker模板的数据模型，引擎将加载预先定义好的FTL模板并生成接口调用及测试脚本，模板内容需要按照FTL语法规则进行编写。插件需要对脚本调用结果进行处理，并展示到工具窗口自定义的控制台中。
+
+模块需要打印智能合约模拟调用结果，包括接口调用成功个数、失败个数、日志、测试覆盖率等。智能合约开发者可以根据控制台打印结果进行代码调试，在智能合约相应代码行设置断点，并以debug模式运行插件。
+
+上文阐述了Fabric智能合约模拟调用模块的整体设计思路，模块核心功能的程序执行流程如图~\ref{fig:3.16}所示。
+
+\begin{figure}[htb]
+  \centering
+  \includegraphics[width=5in]{figure/design/模拟调用模块流程图.png}
+  \caption{模拟调用程序执行流程图}\label{fig:3.16}
+\end{figure}
+
+下文以类图的形式描述了Fabric智能合约模拟调用模块的静态结构，展示了该模块的类、对象、属性以及操作。该模块主要围绕的核心类是MockerToolWindow以及ChaincodeApi。
+Fabric智能合约模拟调用模块类图如图~\ref{fig:3.17}所示。
+
+\begin{figure}[htb]
+  \centering
+  \includegraphics[width=\linewidth]{figure/design/模拟调用模块类图.png}
+  \caption{Fabric智能合约模拟调用模块类图}\label{fig:3.17}
+\end{figure}
+
+MockerToolWindow作为插件自定义的工具窗口，其设计与实现的内容将被工具工厂加载，工具窗口内部的智能合约面板区域以表格形式呈现，需要实现自定义的表格渲染器MyTableCellRender以绘制表格。
+
+Fabric智能合约模拟调用模块设计并抽象了智能合约接口类ChaincodeApi，将智能合约中的每个接口及其相关信息作为List的一项，最终添加到FreeMarker模板的数据模型Map中。
+
+本插件不仅可以帮助智能合约开发者验证代码编写的语法正确性，还通过Fabric智能合约模拟调用模块保证了智能合约中业务逻辑的连贯性和一致性，同时考虑了用户使用插件的体验感。
+
+\section{本章小结}
+
+本章从功能性需求和非功能性需求的角度对面向Hyperledger Fabric智能合约的开发插件进行细致的分析。
+通过用例图展示了插件的功能性需求，并分别对智能合约初始模板生成、代码智能提示、模拟调用及测试等功能进行需求分析；
+非功能性需求从插件的性能、可适配性、可用性等方面考虑并进行阐述。
+同时，本章基于插件的需求分析进行系统设计，包括概要设计和详细设计。
+概要设计部分展示了面向Hyperledger Fabric智能合约的开发插件的总体架构以及功能模块的划分设计。
+详细设计部分阐述了Fabric智能合约初始模板生成、代码智能提示、模拟调用及测试三个功能模块的设计思路，同时结合静态、动态模型等方式进行了细致的阐述。
