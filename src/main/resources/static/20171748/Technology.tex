@@ -1,0 +1,172 @@
+\chapter{技术综述}
+
+本章对于面向Hyperledger Fabric智能合约的开发插件所应用到的关键技术给出简要介绍。插件开发主要采用Java编程语言，智能合约代码提示的部分应用了Python脚本语言，由于此插件针对Node.js智能合约，因此在开发过程中还使用了JavaScript脚本语言。项目开发过程涉及本章将要介绍的区块链、Hyperledger Fabric、IntelliJ插件、自然语言处理、网页爬虫、Flask Web应用框架、Freemarker模板等相关技术。
+
+\section{区块链技术}
+
+\subsection{核心架构}
+
+区块链采用链式区块存储交易数据，区块包含区块头和区块体两部分，区块数据结构如图~\ref{fig:2.1}所示。链上的每一个区块头都会保存前一个区块头的哈希值，以此形成可追踪溯源且不可篡改的链条结构~\cite{Bitcoin}，区块利用了Merkle树结构记录交易信息~\cite{DBLP:reference/db/Carminati18b}。
+
+区块链是一种去中心化的分布式网络，其底层是一个与传统模式不同的分布式数据库，它通过共识机制、P2P网络、加密算法等技术实现了一个不可篡改、可溯源、安全可靠的网络~\cite{XiliangWang}，如图~\ref{fig:2.2}所示。
+
+\begin{figure}[htb]
+  \centering
+  \includegraphics[width=\textwidth]{figure/technology/区块数据结构.png}
+  \caption{区块数据结构}\label{fig:2.1}
+\end{figure}
+
+\begin{figure}[htb]
+  \centering
+  \includegraphics[width=0.7\textwidth]{figure/technology/区块链架构.png}
+  \caption{区块链架构}\label{fig:2.2}
+\end{figure}
+
+\subsection{共识机制}
+
+共识机制是区块链技术保证数据正确性和一致性的关键，它作为一种设定好的协议，使得各个节点之间进行规范化的数据验证，从而确保整个分布式网络达成共识。
+
+不同的区块链平台采用的共识机制不尽相同，比特币架构采用了工作量证明（Proof-of-Work，PoW）的共识机制~\cite{XuanHan}，该机制依赖网络中各个节点的计算能力来确保整个分布式网络的数据一致性，算力强的节点获得投票权，并且安全性得到了加强，攻击者需要掌控一半以上的算力才可以攻击网络；
+以太坊通常采用PoW、权益证明机制（Proof-of-Stake，PoS）~\cite{DBLP:conf/iceccs/ThinDBD18}以及股份授权证明机制（Delegated-Proof-of-Stake，DPoS）~\cite{YongZhang}的混合性共识机制，PoS改进了PoW共识机制，通过减少无用计算提升了资源利用率并且提高了区块链网络性能，但网络的去中心化则被削弱，而DPoS弥补了PoW和PoS的缺陷，引入证明人机制在降低资源消耗的同时保证了去中心化的优势；
+Hyperledger Fabric 1.0采用了特有的Solo和Kafka机制，2.0版本则引入了Raft等共识机制~\cite{ShaoqiWang, ZhikeWang}，确保交易中的所有参与者都必须经过认证。
+
+\subsection{智能合约}
+
+智能合约最开始并不属于区块链领域，Nick Szabo最早定义了智能合约的概念：一个智能合约是一套以数字形式定义的承诺，包括合约参与方可于其上执行这些承诺的协议~\cite{DBLP:journals/fgcs/ZhengXDCCWI20}。区块链的出现为智能合约的执行提供了可信环境，随着以太坊平台的出现，智能合约初次被应用在区块链领域。
+
+智能合约本质上是一段运行在区块链网络节点上的程序代码，其在区块链网络中承载了预先规定好的业务逻辑，包括对象的状态、交易触发的条件、数据更新的规则等，开发人员只有通过智能合约才能获取或者更新区块中存储的数据。
+以太坊平台的智能合约是不可变的，其一旦部署在网络节点上，就无法再进行修改~\cite{DBLP:journals/corr/abs-1807-01868}。
+
+当交易的参与节点满足预先规定的条件时，智能合约将被节点执行，相应的业务逻辑代码将被调用。
+在区块链网络中，作为交易参与者的每个节点都必须严格执行智能合约，其执行环境可以是像Hyperledger Fabric采用的Docker容器~\cite{DBLP:journals/sigops/Boettiger15}，也可以是像以太坊平台采用的EVM虚拟机~\cite{DBLP:journals/corr/abs-1710-06372}，这两种执行环境都保证了智能合约执行时所需要的资源的独立性和隔离性。
+
+智能合约的开发语言随着区块链的发展也产生了变化。区块链2.0阶段的代表平台以太坊，其智能合约开发语言主要采用Solidity，Solidity是一种专门为以太坊智能合约设计的编程语言。进入区块链3.0阶段后，智能合约开发语言逐渐向简洁的高级程序开发语言转变，例如EOS平台采用的C++以及Hyperledger Fabric平台采用的Node.js、Java、Python、Go等多种编程语言。多种编程语言对智能合约的支持降低了区块链开发的门槛。
+
+\section{Hyperledger Fabric平台}
+
+\subsection{核心概念}
+
+Hyperledger Fabric是区块链进入3.0发展阶段的典型代表平台之一，其交易效率得到大幅度提升，支持组件模块化且可配置~\cite{DBLP:conf/eurosys/AndroulakiBBCCC18}，为企业级应用的联盟链提供了有价值的选择~\cite{DBLP:conf/isads/XuZZP17}。
+Hyperledger Fabric平台引入了以下特有的一些概念~\cite{NingDong}：
+
+\begin{itemize}
+    \item 通道（Channel）：为联盟链提供了数据隔离方面的支持，是Hyperledger Fabric的一个独立的子网。节点需要在满足安全策略的前提下才能加入通道，而只有加入了通道的节点才有资格接触数据，因此解决了隐私问题。每个节点也可以加入不同通道以达到不同的交易目的。
+    \item 世界状态（World State）：交易数据当前的状态，以键值对形式存在。
+    \item 账本（Ledger）：区块链网络存储的数据，包含世界状态以及区块链交易日志。账本具有只可添加、不可修改的特性，保证了数据的有效性和一致性，使得交易安全且不可篡改。区块链网络节点上可以存储多个账本。
+    \item 背书（Endorse）：制定了一种策略，区块链网络节点需要按照背书策略进行数据验证并且达成共识，从而完成有效的交易。
+    \item 成员服务提供者（Membership Service Provider，MSP）：用于区块链网络节点的身份认证，负责管理节点的身份信息，关联了网络实体与加密标识，采用传统的公钥基础设施（Public Key Infrastructure，PKI）分层模型。
+\end{itemize}
+
+\subsection{架构设计}
+
+Hyperledger Fabric网络架构由Peer节点、Orderer节点、证书授权（Certificate Authority，CA）节点组成：
+
+\begin{itemize}
+    \item Peer节点：存储了账本和区块，负责智能合约的执行。其中Committing Peer节点会接受生成的区块，经过验证的区块将提交给账本；Endorsing Peer节点安装了智能合约，将参与背书过程，进行交易的模拟执行；一部分Peer节点；Leader Peer负责与Orderer节点进行沟通；Anchor Peer可以有零至多个，用于处理跨组织的节点通信。
+    \item Orderer节点：组织中可以有多个Orderer节点，其主要负责接收并验证签名和交易~\cite{DBLP:conf/dsn/SousaBV18}，通过排序操作在交易顺序上建立共识，创建区块并向Peer节点广播区块。Hyperledger Fabric的排序机制可以选择单一节点的Solo、多节点的Kafka或者Raft等协议。
+    \item CA节点：CA节点作为区块链网络的认证中心，扮演了生成并颁发证书、创建账户的角色。CA节点使得Hyperledger Fabric网络中的每个操作都具有数字签名，智能合约可以根据数字签名判断是否执行、如何执行，该节点保证了Hyperledger Fabric网络的安全性。
+\end{itemize}
+
+以上几种节点都有各自的角色，负责不同的任务，Hyperledger Fabric的整体节点架构如图~\ref{fig:2.3}所示。
+
+\begin{figure}[htb]
+  \centering
+  \includegraphics[width=\linewidth]{figure/technology/节点架构.png}
+  \caption{节点架构}\label{fig:2.3}
+\end{figure}
+
+\subsection{Hyperledger Fabric智能合约}
+
+智能合约在Hyperledger Fabric架构中被称为链码（Chaincode）。
+链码作为一段程序代码运行在Peer节点上，提供了业务逻辑的接口。
+只有安装了链码的Peer节点才可以参与背书过程。
+客户端应用程序可以通过调用链码实现对区块链账本的查询、更新操作。
+
+目前Hyperledger Fabric已经支持Node.js、Go、Java等多种编程语言进行链码开发。
+区块链开发人员在完成智能合约的编写工作之后需要进行测试工作，针对Hyperledger Fabric链码的测试方式有两种，一种是搭建实际的区块链网络，在环境中切入开发者模式，通过调用智能合约接口进行测试；
+另一种是利用Mockstub编写单元测试代码。
+
+智能合约在被客户端应用程序调用之前，需要经历安装、实例化等操作。
+链码的生命周期要求通道中的各个组织就链码达成一致，这一过程包括以下几个步骤：
+
+\begin{itemize}
+    \item 组织需要将链码打包。
+    \item 需要进行背书交易或者对账本进行访问的组织必须在Peer节点上安装链码。
+    \item 区块链网络中的组织需要根据背书策略就链码定义达成共识，背书策略将指定批准交易的组织数量。
+    \item 将链码定义提交到通道上进行链码部署。
+\end{itemize}
+
+链码将会运行在Docker 容器中，以此避免链码漏洞对整体网络造成大范围影响。
+链码的概念模型如图~\ref{fig:2.4}所示。
+
+\begin{figure}[htb]
+  \centering
+  \includegraphics[width=0.9\linewidth]{figure/technology/链码概念模型.png}
+  \caption{链码概念模型}\label{fig:2.4}
+\end{figure}
+
+\section{IntelliJ插件}
+
+\subsection{Action系统}
+
+Action系统是IntelliJ的集成开发环境所提供的扩展点之一~\cite{DBLP:conf/sigsoft/HajjN20}，开发IntelliJ插件时可以利用Action作为插件功能对外暴露的方式。
+Action既可以被添加到IDE的菜单栏或者工具栏，也可以通过快捷键或搜索的途径调用。
+插件项目自定义的Action需要继承Action系统提供的AnAction作为父类，通过重写~\texttt{actionPerformed()}方法实现具体的业务逻辑，可以获取该方法的AnActionEvent参数，以此操作IDE中的项目、编辑窗口、文件等元素。实现业务逻辑的Action还需要进行注册才能决定如何显示在IDE中。
+
+\subsection{用户接口组件}
+
+IntelliJ平台提供的插件SDK包含了多种用户接口组件（User Interface Component），User Interface Component作为IntelliJ自定义的Swing组件，为插件开发者提高了开发效率。
+在实现插件提供的业务逻辑功能后，可以通过这些特殊的组件将功能与IDE UI相结合。
+
+本论文采用了Tool Windows、Messages等组件以辅助插件的开发。
+Tool Windows相当于IDE的独立子窗口，当前主流项目构建工具Ant、Gradle、Maven等都有其自定义的Tool Window以提供功能入口。
+Messages可以帮助显示消息盒子，插件使用者可以以此方式与插件进行交互。
+
+\subsection{DevKit插件}
+
+DevKit插件是IntelliJ平台所提供的一种开发插件的便捷方式，开发者可以利用DevKit自定义的SDK和Actions进行插件的开发。
+在使用DevKit之前，需要在IDE中安装该插件，并且配置好IntelliJ平台的SDK。进行业务逻辑开发后可以像传统项目一样运行并调试插件。完成开发测试的插件可以进行构建和安装，开发者可以选择将其部署在本地IDE或者发布到插件仓库中供他人安装和使用。
+
+\section{自然语言处理}
+
+\subsection{自然语言处理概述}
+
+近年来，自然语言处理（Natural Language Processing，NLP）在人工智能领域的应用范围逐渐扩大。
+NLP最早广泛用于机器翻译，乔治敦大学联合IBM于1954年研发了第一台NLP机器~\cite{DBLP:conf/icdm/AbeT10}，该机器能够将俄语句子翻译成英语句子。
+现如今，NLP涉足了越来越多的应用领域，语音识别、舆情监测、文本生成等方向都可以采用NLP技术。
+由此可见，NLP主要针对词语、句子、段落、文章进行处理。
+随着深度学习的盛行，经历了基于规则和统计方法的开发者逐渐将深度学习应用于NLP中~\cite{DBLP:conf/nips/SutskeverVL14}，而这意味着良好的数据集将对处理结果起到至关重要的作用。
+
+\subsection{Transformer模型}
+
+Google团队在2017年首次提出了Transformer模型~\cite{DBLP:conf/nips/VaswaniSPUJGKP17}，该模型摒弃了之前广泛使用的卷积神经网络和循环神经网络，引入了自注意力机制和多头注意力机制来处理文本，以此提升处理速度、效果和计算资源的利用率。Transformer模型包括负责接收文本作为输入的编码器以及负责把新表达转换为目的词的解码器。
+
+\subsection{GPT-2模型}
+
+GPT-2模型发布于2019年，是目前文本生成模型的最佳选择之一，用于训练该模型的数据集体量相比在它之前的Transformer、BERT~\cite{DBLP:conf/naacl/DevlinCLT19}等模型都要庞大得多，采用GPT-2模型生成的文本具有更好的连贯性和准确度。本论文利用该模型实现针对Hyperledger Fabric智能合约的代码智能补全。
+
+GPT-2内部采用了Transformer模型的解码器并且仍然沿用了自注意力机制，在处理单词序列并传入神经网络之前融入了对上下文单词的理解。每一层解码器都会处理输入进来的单词序列，并将处理后的结果传入下一层解码器，模型会利用最终向量求得词汇表中单词的注意力得分，得分高的作为输出结果。
+
+\section{网页爬虫}
+
+网页爬虫是一段可以自动抓取网页资源的脚本程序，允许根据不同目标对网页进行分析，过滤并锁定数据，从而进行数据爬取。网络爬虫基于网页的URL，在抓取过程中不断获取新的URL放入待抓取队列，直到满足程序定义的终止条件。
+
+由于数据集的体量对于NLP模型训练和最终的文本生成效果具有决定性的影响，因此本论文需要采集大量的Hyperledger Fabric智能合约，数据采集通过Python网络爬虫实现。
+
+\section{Flask框架}
+
+Flask框架是Python开发者常用的一款轻量级的Web框架~\cite{DBLP:books/daglib/0034106}。本插件采用IntelliJ IDEA作为IDE，其底层开发语言为Java，因此插件主要采用Java进行编码，而智能合约的代码提示功能采用了NLP技术，其涉及的数据采集、数据清洗、模型训练等流程均采用Python实现，因此本插件利用Flask Web框架对外提供NLP服务的接口，既提升了代码补全速度，也使得两种语言得到更好的解耦。
+
+\section{FreeMarker模板}
+
+FreeMarker作为一款模板引擎，为开发者提供了一种基于模板预定规则生成输出文本的工具~\cite{DBLP:journals/program/RadjenovicMS09}，一般用于HTML网页、电子邮件、源代码、配置文件的生成。
+
+模板内容的编写采用特殊且简单的FreeMarker模板语言（FreeMarker Template Language，FTL）。
+该技术让开发者在模板中专注文本的展示形式，在模板外专注文本的展示内容。
+本文利用FreeMarker模板减少了大量冗余代码，提升了开发效率。
+
+FreeMarker引擎有多种模板加载方式，开发者可以通过内建模板加载器加载指定文件路径、类路径或Web应用目录下的模板，还可以根据不同需求从多个位置或其他资源加载模板。
+
+\section{本章小结}
+
+本章对面向Hyperledger Fabric智能合约的开发插件在研发过程中所采用的关键技术进行了简要介绍，包括其概念、优势、基础原理等。插件基于IntelliJ平台的集成开发环境和DevKit SDK进行搭建，利用FreeMarker模板技术实现Fabric初始智能合约的生成；采用Mockstub配合Node.js测试框架完成对智能合约的模拟调用和测试功能；通过NLP技术提供智能合约的代码提示。同时，本章阐述了选择上述技术实现目标功能的理由。
