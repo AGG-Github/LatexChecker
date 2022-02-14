@@ -12,6 +12,7 @@
     <artifactId>latexchecker</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>latexchecker</name>
+    <packaging>war</packaging>
     <description>Latexchecker</description>
 
     <properties>
